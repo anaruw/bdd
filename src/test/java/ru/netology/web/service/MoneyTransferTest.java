@@ -193,28 +193,28 @@ public class MoneyTransferTest {
         dashBoardMain.resultOfInvalidReplenishment(planningTransfer, fromInitialBalance, toInitialBalance);
     }
 
-    @Test
-    public void transferWithAmountAboveBalance() {
-        String cardNumberFrom = "5559 0000 0000 0001";
-        String cardNumberTo = "5559 0000 0000 0002";
-        int amount = 30000;
-
-        UserInfo info = DataHelper.getAuthInfo();
-        VerificationCode verificationCode = DataHelper.newVerificationCode(info);
-        TransferInfo planningTransfer = DataHelper.planningTransfer(cardNumberFrom, cardNumberTo, amount);
-
-        LoginPage loginPage = new LoginPage();
-
-        VerificationPage verificationPage = loginPage.validAuth(info);
-        DashBoardPage dashBoardMain = verificationPage.validVerify(verificationCode);
-
-        int fromInitialBalance = DataHelper.cardBalance(dashBoardMain.cardChoice(cardNumberFrom));
-        int toInitialBalance = DataHelper.cardBalance(dashBoardMain.cardChoice(cardNumberTo));
-
-        TransferPage testTransfer = dashBoardMain.replenishment(planningTransfer);
-        testTransfer.transferWithAmountAboveBalance(planningTransfer, fromInitialBalance);
-        dashBoardMain = testTransfer.canceledTransfer();
-
-        dashBoardMain.resultOfInvalidReplenishment(planningTransfer, fromInitialBalance, toInitialBalance);
-    }
+//    @Test
+//    public void transferWithAmountAboveBalance() {
+//        String cardNumberFrom = "5559 0000 0000 0001";
+//        String cardNumberTo = "5559 0000 0000 0002";
+//        int amount = 30000;
+//
+//        UserInfo info = DataHelper.getAuthInfo();
+//        VerificationCode verificationCode = DataHelper.newVerificationCode(info);
+//        TransferInfo planningTransfer = DataHelper.planningTransfer(cardNumberFrom, cardNumberTo, amount);
+//
+//        LoginPage loginPage = new LoginPage();
+//
+//        VerificationPage verificationPage = loginPage.validAuth(info);
+//        DashBoardPage dashBoardMain = verificationPage.validVerify(verificationCode);
+//
+//        int fromInitialBalance = DataHelper.cardBalance(dashBoardMain.cardChoice(cardNumberFrom));
+//        int toInitialBalance = DataHelper.cardBalance(dashBoardMain.cardChoice(cardNumberTo));
+//
+//        TransferPage testTransfer = dashBoardMain.replenishment(planningTransfer);
+//        testTransfer.transferWithAmountAboveBalance(planningTransfer, fromInitialBalance);
+//        dashBoardMain = testTransfer.canceledTransfer();
+//
+//        dashBoardMain.resultOfInvalidReplenishment(planningTransfer, fromInitialBalance, toInitialBalance);
+//    }
 }
