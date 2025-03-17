@@ -68,6 +68,21 @@ public class TransferPage {
         ));
     }
 
+    public void transferWithZeroAmount(TransferInfo planningTransfer) {
+        if (planningTransfer.getAmount() == 0) {
+            inputValues(planningTransfer);
+            transferButton.click();
+            errorNotification.shouldBe(Condition.allOf(
+                    Condition.visible,
+                    Condition.exactText("Ошибка! Произошла ошибка")
+            ));
+        } else {
+            throw new RuntimeException(
+                    "значение amount не подходит для проверки"
+            );
+        }
+    }
+
     public void transferWithEmptyCardFromField(TransferInfo planningTransfer) {
         inputAmount(planningTransfer);
         transferButton.click();
@@ -77,18 +92,56 @@ public class TransferPage {
         ));
     }
 
-    public void transferWithAmountAboveBalance(TransferInfo planningTransfer) {
-        inputValues(planningTransfer);
-        transferButton.click();
-        errorNotification.shouldBe(Condition.allOf(
-                Condition.visible,
-                Condition.exactText("Ошибка! Произошла ошибка")
-        ));
+    public void transferWithCardFromEqualsCardTo(TransferInfo planningTransfer) {
+        if (DataHelper.hiddenCardNumber(planningTransfer.getCardNumberFrom()).equals(DataHelper.hiddenCardNumber(planningTransfer.getCardNumberTo()))) {
+            inputValues(planningTransfer);
+            transferButton.click();
+            errorNotification.shouldBe(Condition.allOf(
+                    Condition.visible,
+                    Condition.exactText("Ошибка! Произошла ошибка")
+            ));
+        } else {
+            throw new RuntimeException(
+                    "значение cardNumberFrom не подходит для проверки"
+            );
+        }
+    }
+
+    public void transferWithAmountAboveBalance(TransferInfo planningTransfer, int cardFromBalance) {
+        if (planningTransfer.getAmount() > cardFromBalance) {
+            inputValues(planningTransfer);
+            transferButton.click();
+            errorNotification.shouldBe(Condition.allOf(
+                    Condition.visible,
+                    Condition.exactText("Ошибка! Произошла ошибка")
+            ));
+        } else {
+            throw new RuntimeException(
+                    "значение amount не подходит для проверки"
+            );
+        }
     }
 
     public DashBoardPage canceledTransferWithCompletedInput(TransferInfo planningTransfer) {
         inputValues(planningTransfer);
         cancelButton.click();
         return new DashBoardPage();
+    }
+
+    public void transferWithNegativeAmount(TransferInfo planningTransfer) {
+        if (planningTransfer.getAmount() < 0) {
+            inputValues(planningTransfer);
+        } else {
+            throw new RuntimeException(
+                    "значение amount не подходит для проверки"
+            );
+        }
+        if (amountInputField.getValue().equals(planningTransfer.getAmount() + "")) {
+            transferButton.click();
+            errorNotification.shouldBe(Condition.allOf(
+                    Condition.visible,
+                    Condition.exactText("Ошибка! Произошла ошибка")
+            ));
+        }
     }
 }
