@@ -50,18 +50,6 @@ public class DataHelper {
         return Integer.parseInt(cardInfo.substring(cardInfo.indexOf(beforeBalanceText) + beforeBalanceText.length(), cardInfo.indexOf(afterBalanceText)));
     }
 
-    public boolean enabledCardNumbers(TransferInfo planningTransfer) {
-        return planningTransfer.getCardNumberFrom().equals("5559 0000 0000 0001") || planningTransfer.getCardNumberFrom().equals("5559 0000 0000 0002");
-    }
-
-    public boolean amountAboveZero(TransferInfo planningTransfer) {
-        return planningTransfer.getAmount() > 0;
-    }
-
-    public boolean cardFromNotEqualsCardTo(TransferInfo planningTransfer) {
-        return !planningTransfer.getCardNumberFrom().equals(planningTransfer.getCardNumberTo());
-    }
-
     public String fakeCardNumber() {
         Faker faker = new Faker();
         String template = "5559 0000 0000 000";

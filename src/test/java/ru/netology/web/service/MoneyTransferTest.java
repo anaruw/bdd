@@ -50,9 +50,10 @@ public class MoneyTransferTest {
         dashBoardPage = prepareToTransfer();
         int expectedCardFromBalance = DataHelper.extractBalance(dashBoardPage.cardInfo(cardNumberFrom)) - planningTransfer.getAmount();
         int expectedCardToBalance = DataHelper.extractBalance(dashBoardPage.cardInfo(cardNumberTo)) + planningTransfer.getAmount();
-
         TransferPage transferPage = dashBoardPage.replenishment(planningTransfer);
 
+        transferPage.inputAmount(planningTransfer);
+        transferPage.inputCardFromNumber(planningTransfer.getCardNumberFrom());
         dashBoardPage = transferPage.validTransfer(planningTransfer, testName);
 
         dashBoardPage.checkBalance(cardNumberFrom, expectedCardFromBalance);
@@ -91,7 +92,9 @@ public class MoneyTransferTest {
         int expectedCardToBalance = DataHelper.extractBalance(dashBoardPage.cardInfo(cardNumberTo));
         TransferPage transferPage = dashBoardPage.replenishment(planningTransfer);
 
-        dashBoardPage = transferPage.canceledTransferWithInput(planningTransfer, testName);
+        transferPage.inputAmount(planningTransfer);
+        transferPage.inputCardFromNumber(planningTransfer.getCardNumberFrom());
+        dashBoardPage = transferPage.canceledTransfer(testName);
 
         dashBoardPage.checkBalance(cardNumberFrom, expectedCardFromBalance);
         dashBoardPage.checkBalance(cardNumberTo, expectedCardToBalance);
@@ -101,6 +104,7 @@ public class MoneyTransferTest {
     @DisplayName("transfer_with_empty_card_from_field")
     public void transferWithEmptyCardFromField(TestInfo testInfo) {
         String testName = testInfo.getDisplayName();
+        String notificationText = "Выберите Вашу карту, откуда совершить перевод";
         cardNumberFrom = "5559 0000 0000 0001";
         cardNumberTo = "5559 0000 0000 0002";
         amount = 1;
@@ -110,7 +114,8 @@ public class MoneyTransferTest {
         int expectedCardToBalance = DataHelper.extractBalance(dashBoardPage.cardInfo(cardNumberTo));
         TransferPage transferPage = dashBoardPage.replenishment(planningTransfer);
 
-        dashBoardPage = transferPage.transferWithEmptyCardFromField(planningTransfer, testName);
+        transferPage.inputAmount(planningTransfer);
+        dashBoardPage = transferPage.invalidTransfer(testName, notificationText);
 
         dashBoardPage.checkBalance(cardNumberFrom, expectedCardFromBalance);
         dashBoardPage.checkBalance(cardNumberTo, expectedCardToBalance);
@@ -120,6 +125,7 @@ public class MoneyTransferTest {
     @DisplayName("transfer_with_fake_card_from_number")
     public void transferWithFakeCardFromNumber(TestInfo testInfo) {
         String testName = testInfo.getDisplayName();
+        String notificationText = "Выберите Вашу карту, откуда совершить перевод";
         cardNumberFrom = "5559 0000 0000 0001";
         cardNumberTo = "5559 0000 0000 0002";
         amount = 1;
@@ -129,7 +135,9 @@ public class MoneyTransferTest {
         int expectedCardToBalance = DataHelper.extractBalance(dashBoardPage.cardInfo(cardNumberTo));
         TransferPage transferPage = dashBoardPage.replenishment(planningTransfer);
 
-        dashBoardPage = transferPage.transferWithFakeCardFromNumber(planningTransfer, testName);
+        transferPage.inputAmount(planningTransfer);
+        transferPage.inputCardFromNumber(DataHelper.fakeCardNumber());
+        dashBoardPage = transferPage.invalidTransfer(testName, notificationText);
 
         dashBoardPage.checkBalance(cardNumberFrom, expectedCardFromBalance);
         dashBoardPage.checkBalance(cardNumberTo, expectedCardToBalance);
@@ -139,6 +147,7 @@ public class MoneyTransferTest {
     @DisplayName("transfer_with_card_from_equals_card_to")
     public void transferWithCardFromEqualsCardTo(TestInfo testInfo) {
         String testName = testInfo.getDisplayName();
+        String notificationText = "Выберите Вашу карту, откуда совершить перевод";
         cardNumberFrom = "5559 0000 0000 0001";
         cardNumberTo = "5559 0000 0000 0001";
         amount = 1;
@@ -148,7 +157,9 @@ public class MoneyTransferTest {
         int expectedCardToBalance = DataHelper.extractBalance(dashBoardPage.cardInfo(cardNumberTo));
         TransferPage transferPage = dashBoardPage.replenishment(planningTransfer);
 
-        dashBoardPage = transferPage.transferWithCardFromEqualsCardTo(planningTransfer, testName);
+        transferPage.inputAmount(planningTransfer);
+        transferPage.inputCardFromNumber(planningTransfer.getCardNumberFrom());
+        dashBoardPage = transferPage.invalidTransfer(testName, notificationText);
 
         dashBoardPage.checkBalance(cardNumberFrom, expectedCardFromBalance);
         dashBoardPage.checkBalance(cardNumberTo, expectedCardToBalance);
@@ -158,6 +169,7 @@ public class MoneyTransferTest {
     @DisplayName("transfer_with_empty_amount_field")
     public void transferWithEmptyAmountField(TestInfo testInfo) {
         String testName = testInfo.getDisplayName();
+        String notificationText = "Введите сумму перевода";
         cardNumberFrom = "5559 0000 0000 0001";
         cardNumberTo = "5559 0000 0000 0002";
         amount = 1;
@@ -167,7 +179,8 @@ public class MoneyTransferTest {
         int expectedCardToBalance = DataHelper.extractBalance(dashBoardPage.cardInfo(cardNumberTo));
         TransferPage transferPage = dashBoardPage.replenishment(planningTransfer);
 
-        dashBoardPage = transferPage.transferWithEmptyAmountField(planningTransfer, testName);
+        transferPage.inputCardFromNumber(planningTransfer.getCardNumberFrom());
+        dashBoardPage = transferPage.invalidTransfer(testName, notificationText);
 
         dashBoardPage.checkBalance(cardNumberFrom, expectedCardFromBalance);
         dashBoardPage.checkBalance(cardNumberTo, expectedCardToBalance);
@@ -177,6 +190,7 @@ public class MoneyTransferTest {
     @DisplayName("transfer_with_zero_amount")
     public void transferWithZeroAmount(TestInfo testInfo) {
         String testName = testInfo.getDisplayName();
+        String notificationText = "Введите сумму перевода";
         cardNumberFrom = "5559 0000 0000 0001";
         cardNumberTo = "5559 0000 0000 0002";
         amount = 0;
@@ -186,7 +200,14 @@ public class MoneyTransferTest {
         int expectedCardToBalance = DataHelper.extractBalance(dashBoardPage.cardInfo(cardNumberTo));
         TransferPage transferPage = dashBoardPage.replenishment(planningTransfer);
 
-        dashBoardPage = transferPage.transferWithZeroAmount(planningTransfer, testName);
+        transferPage.inputAmount(planningTransfer);
+        transferPage.inputCardFromNumber(planningTransfer.getCardNumberFrom());
+
+        if (transferPage.checkAmountInput(planningTransfer)) {
+            dashBoardPage = transferPage.invalidTransfer(testName, notificationText);
+        } else {
+            dashBoardPage = transferPage.canceledTransfer(testName);
+        }
 
         dashBoardPage.checkBalance(cardNumberFrom, expectedCardFromBalance);
         dashBoardPage.checkBalance(cardNumberTo, expectedCardToBalance);
@@ -196,6 +217,7 @@ public class MoneyTransferTest {
     @DisplayName("transfer_with_negative_amount")
     public void transferWithNegativeAmount(TestInfo testInfo) {
         String testName = testInfo.getDisplayName();
+        String notificationText = "Сумма перевода введена некорректно";
         cardNumberFrom = "5559 0000 0000 0001";
         cardNumberTo = "5559 0000 0000 0002";
         amount = -1;
@@ -205,7 +227,14 @@ public class MoneyTransferTest {
         int expectedCardToBalance = DataHelper.extractBalance(dashBoardPage.cardInfo(cardNumberTo));
         TransferPage transferPage = dashBoardPage.replenishment(planningTransfer);
 
-        dashBoardPage = transferPage.transferWithNegativeAmount(planningTransfer, testName);
+        transferPage.inputAmount(planningTransfer);
+        transferPage.inputCardFromNumber(planningTransfer.getCardNumberFrom());
+
+        if (transferPage.checkAmountInput(planningTransfer)) {
+            dashBoardPage = transferPage.invalidTransfer(testName, notificationText);
+        } else {
+            dashBoardPage = transferPage.canceledTransfer(testName);
+        }
 
         dashBoardPage.checkBalance(cardNumberFrom, expectedCardFromBalance);
         dashBoardPage.checkBalance(cardNumberTo, expectedCardToBalance);
