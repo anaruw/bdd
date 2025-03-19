@@ -10,7 +10,6 @@ public class LoginPage {
     private final SelenideElement loginInputField = $("[data-test-id='login'] input");
     private final SelenideElement passwordInputField = $("[data-test-id='password'] input");
     private final SelenideElement actionButton = $("[data-test-id='action-login']");
-    private final SelenideElement errorNotification = $("[data-test-id='error-notification']");
 
     public void auth(UserInfo user) {
         loginInputField.setValue(user.getLogin());

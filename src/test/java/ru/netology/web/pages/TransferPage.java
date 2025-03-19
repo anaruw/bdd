@@ -1,6 +1,7 @@
 package ru.netology.web.pages;
 
 import com.codeborne.selenide.Condition;
+import com.codeborne.selenide.Selenide;
 import com.codeborne.selenide.SelenideElement;
 import ru.netology.web.data.TransferInfo;
 import ru.netology.web.util.DataHelper;
@@ -13,7 +14,6 @@ public class TransferPage {
 
     private final SelenideElement amountInputField = $("[data-test-id='amount'] input");
     private final SelenideElement cardFromInputField = $("[data-test-id='from'] input");
-    private final SelenideElement cardToInputField = $("[data-test-id='to'] input");
     private final SelenideElement transferButton = $("[data-test-id='action-transfer']");
     private final SelenideElement cancelButton = $("[data-test-id='action-cancel']");
     private final SelenideElement errorNotification = $("[data-test-id='error-notification'] .notification__content");
@@ -26,122 +26,169 @@ public class TransferPage {
         ), Duration.ofSeconds(15));
     }
 
-    public void inputAmount(TransferInfo planningTransfer) {
+    private void inputAmount(TransferInfo planningTransfer) {
         amountInputField.setValue("" + planningTransfer.getAmount());
     }
 
-    public void inputCardFrom(TransferInfo planningTransfer) {
-        cardFromInputField.setValue(planningTransfer.getCardNumberFrom());
+    private void inputCardFromNumber(String cardFromNumber) {
+        cardFromInputField.setValue(cardFromNumber);
     }
 
-    public void inputValues(TransferInfo planningTransfer) {
-        inputAmount(planningTransfer);
-        inputCardFrom(planningTransfer);
-    }
-
-    public void checkCardTo(TransferInfo planningTransfer) {
-        cardToInputField.shouldHave(Condition.value(
-                DataHelper.hiddenCardNumber(planningTransfer.getCardNumberTo())
-        ));
-    }
-
-    public DashBoardPage validTransfer(TransferInfo planningTransfer) {
-        inputValues(planningTransfer);
-        checkCardTo(planningTransfer);
-
+    private void transferButtonClick(String testName) {
+        Selenide.screenshot(testName + "_before_click");
         transferButton.click();
-
-        return new DashBoardPage();
+        Selenide.screenshot(testName + "_after_click");
     }
 
-    public DashBoardPage canceledTransfer() {
+    private void cancelButtonClick(String testName) {
+        Selenide.screenshot(testName + "_before_click");
         cancelButton.click();
+        Selenide.screenshot(testName + "_after_click");
+    }
+
+    public DashBoardPage validTransfer(TransferInfo planningTransfer, String testName) {
+        if (DataHelper.enabledCardNumbers(planningTransfer) &&
+                DataHelper.cardFromNotEqualsCardTo(planningTransfer) &&
+                DataHelper.amountAboveZero(planningTransfer)
+        ) {
+            inputAmount(planningTransfer);
+            inputCardFromNumber(planningTransfer.getCardNumberFrom());
+
+            transferButtonClick(testName);
+            return new DashBoardPage();
+        }
+        return null;
+    }
+
+    public DashBoardPage canceledTransfer(String testName) {
+        cancelButtonClick(testName);
         return new DashBoardPage();
     }
 
-    public void transferWithEmptyAmountField(TransferInfo planningTransfer) {
-        inputCardFrom(planningTransfer);
-        transferButton.click();
-        errorNotification.shouldBe(Condition.allOf(
-                Condition.visible,
-                Condition.exactText("Ошибка! Произошла ошибка")
-        ));
+    public DashBoardPage canceledTransferWithInput (TransferInfo planningTransfer, String testName) {
+        if (DataHelper.enabledCardNumbers(planningTransfer) &&
+                DataHelper.cardFromNotEqualsCardTo(planningTransfer) &&
+                DataHelper.amountAboveZero(planningTransfer)
+        ) {
+            inputAmount(planningTransfer);
+            inputCardFromNumber(planningTransfer.getCardNumberFrom());
+
+            cancelButtonClick(testName);
+            return new DashBoardPage();
+        }
+        return null;
     }
 
-    public void transferWithZeroAmount(TransferInfo planningTransfer) {
-        if (planningTransfer.getAmount() == 0) {
-            inputValues(planningTransfer);
-            transferButton.click();
+    public DashBoardPage transferWithEmptyCardFromField (TransferInfo planningTransfer, String testName) {
+        if (DataHelper.amountAboveZero(planningTransfer)) {
+            inputAmount(planningTransfer);
+
+            transferButtonClick(testName);
             errorNotification.shouldBe(Condition.allOf(
                     Condition.visible,
-                    Condition.exactText("Ошибка! Произошла ошибка")
-            ));
-        } else {
-            throw new RuntimeException(
-                    "значение amount не подходит для проверки"
-            );
+                    Condition.exactText("Заполните номер карты, откуда совершить перевод")
+            ), Duration.ofSeconds(10));
+
+            cancelButton.click();
+            return new DashBoardPage();
         }
+        return null;
     }
 
-    public void transferWithEmptyCardFromField(TransferInfo planningTransfer) {
-        inputAmount(planningTransfer);
-        transferButton.click();
-        errorNotification.shouldBe(Condition.allOf(
-                Condition.visible,
-                Condition.exactText("Ошибка! Произошла ошибка")
-        ));
-    }
+    public DashBoardPage transferWithCardFromEqualsCardTo (TransferInfo planningTransfer, String testName) {
+        if (DataHelper.enabledCardNumbers(planningTransfer) &&
+                !DataHelper.cardFromNotEqualsCardTo(planningTransfer) &&
+                DataHelper.amountAboveZero(planningTransfer)
+        ) {
+            inputAmount(planningTransfer);
+            inputCardFromNumber(planningTransfer.getCardNumberFrom());
 
-    public void transferWithCardFromEqualsCardTo(TransferInfo planningTransfer) {
-        if (DataHelper.hiddenCardNumber(planningTransfer.getCardNumberFrom()).equals(DataHelper.hiddenCardNumber(planningTransfer.getCardNumberTo()))) {
-            inputValues(planningTransfer);
-            transferButton.click();
+            transferButtonClick(testName);
             errorNotification.shouldBe(Condition.allOf(
                     Condition.visible,
-                    Condition.exactText("Ошибка! Произошла ошибка")
-            ));
-        } else {
-            throw new RuntimeException(
-                    "значение cardNumberFrom не подходит для проверки"
-            );
+                    Condition.exactText("Выберите другую карту, откуда совершить перевод")
+            ), Duration.ofSeconds(10));
+
+            cancelButton.click();
+            return new DashBoardPage();
         }
+        return null;
     }
 
-    public void transferWithAmountAboveBalance(TransferInfo planningTransfer, int cardFromBalance) {
-        if (planningTransfer.getAmount() > cardFromBalance) {
-            inputValues(planningTransfer);
-            transferButton.click();
+    public DashBoardPage transferWithFakeCardFromNumber (TransferInfo planningTransfer, String testName) {
+        if (DataHelper.amountAboveZero(planningTransfer)) {
+            inputAmount(planningTransfer);
+            inputCardFromNumber(DataHelper.fakeCardNumber());
+
+            transferButtonClick(testName);
             errorNotification.shouldBe(Condition.allOf(
                     Condition.visible,
-                    Condition.exactText("Ошибка! Произошла ошибка")
-            ));
-        } else {
-            throw new RuntimeException(
-                    "значение amount не подходит для проверки"
-            );
+                    Condition.exactText("Выберите Вашу карту, откуда совершить перевод")
+            ), Duration.ofSeconds(10));
+
+            cancelButton.click();
+            return new DashBoardPage();
         }
+        return null;
     }
 
-    public DashBoardPage canceledTransferWithCompletedInput(TransferInfo planningTransfer) {
-        inputValues(planningTransfer);
-        cancelButton.click();
-        return new DashBoardPage();
-    }
+    public DashBoardPage transferWithEmptyAmountField (TransferInfo planningTransfer, String testName) {
+        if (DataHelper.enabledCardNumbers(planningTransfer) &&
+                DataHelper.cardFromNotEqualsCardTo(planningTransfer)
+        ) {
+            inputCardFromNumber(planningTransfer.getCardNumberFrom());
 
-    public void transferWithNegativeAmount(TransferInfo planningTransfer) {
-        if (planningTransfer.getAmount() < 0) {
-            inputValues(planningTransfer);
-        } else {
-            throw new RuntimeException(
-                    "значение amount не подходит для проверки"
-            );
-        }
-        if (amountInputField.getValue().equals(planningTransfer.getAmount() + "")) {
-            transferButton.click();
+            transferButtonClick(testName);
             errorNotification.shouldBe(Condition.allOf(
                     Condition.visible,
-                    Condition.exactText("Ошибка! Произошла ошибка")
-            ));
+                    Condition.exactText("Заполните сумму перевода")
+            ), Duration.ofSeconds(10));
+
+            cancelButton.click();
+            return new DashBoardPage();
         }
+        return null;
     }
+
+    public DashBoardPage transferWithZeroAmount (TransferInfo planningTransfer, String testName) {
+        if (DataHelper.enabledCardNumbers(planningTransfer) &&
+                DataHelper.cardFromNotEqualsCardTo(planningTransfer) &&
+                planningTransfer.getAmount() == 0
+        ) {
+            inputAmount(planningTransfer);
+            inputCardFromNumber(planningTransfer.getCardNumberFrom());
+
+            transferButtonClick(testName);
+            errorNotification.shouldBe(Condition.allOf(
+                    Condition.visible,
+                    Condition.exactText("Заполните сумму перевода")
+            ), Duration.ofSeconds(10));
+
+            cancelButton.click();
+            return new DashBoardPage();
+        }
+        return null;
+    }
+
+    public DashBoardPage transferWithNegativeAmount (TransferInfo planningTransfer, String testName) {
+        if (DataHelper.enabledCardNumbers(planningTransfer) &&
+                DataHelper.cardFromNotEqualsCardTo(planningTransfer) &&
+                planningTransfer.getAmount() < 0
+        ) {
+            inputAmount(planningTransfer);
+            if (Integer.parseInt(amountInputField.getValue()) < 0) {
+                inputCardFromNumber(planningTransfer.getCardNumberFrom());
+
+                transferButtonClick(testName);
+                errorNotification.shouldBe(Condition.allOf(
+                        Condition.visible,
+                        Condition.exactText("Сумма перевода заполнена некорректно")
+                ), Duration.ofSeconds(10));
+            }
+            cancelButton.click();
+            return new DashBoardPage();
+        }
+        return null;
+    }
+
 }

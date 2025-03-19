@@ -2,7 +2,9 @@ package ru.netology.web.service;
 
 import com.codeborne.selenide.Selenide;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 import ru.netology.web.data.TransferInfo;
 import ru.netology.web.data.UserInfo;
 import ru.netology.web.data.VerificationCode;
@@ -13,6 +15,24 @@ import ru.netology.web.pages.VerificationPage;
 import ru.netology.web.util.DataHelper;
 
 public class MoneyTransferTest {
+    DashBoardPage dashBoardPage;
+    String cardNumberFrom;
+    String cardNumberTo;
+    int amount;
+    TransferInfo planningTransfer;
+
+    private DashBoardPage prepareToTransfer() {
+        planningTransfer = DataHelper.planningTransfer(cardNumberFrom, cardNumberTo, amount);
+
+        LoginPage loginPage = new LoginPage();
+        UserInfo testUser = DataHelper.getAuthInfo();
+        VerificationCode verifyCode = DataHelper.newVerificationCode(testUser);
+
+        VerificationPage verificationPage = loginPage.validAuth(testUser);
+        verificationPage.verify(verifyCode);
+
+        return new DashBoardPage();
+    }
 
     @BeforeEach
     public void setUp() {
@@ -20,201 +40,174 @@ public class MoneyTransferTest {
     }
 
     @Test
-    public void validTransferTest() {
+    @DisplayName("valid_transfer")
+    public void validTransfer(TestInfo testInfo) {
+        String testName = testInfo.getDisplayName();
+        cardNumberFrom = "5559 0000 0000 0002";
+        cardNumberTo = "5559 0000 0000 0001";
+        amount = 1;
 
-        String cardNumberFrom = "5559 0000 0000 0001";
-        String cardNumberTo = "5559 0000 0000 0002";
-        int amount = 1000;
+        dashBoardPage = prepareToTransfer();
+        int expectedCardFromBalance = DataHelper.extractBalance(dashBoardPage.cardInfo(cardNumberFrom)) - planningTransfer.getAmount();
+        int expectedCardToBalance = DataHelper.extractBalance(dashBoardPage.cardInfo(cardNumberTo)) + planningTransfer.getAmount();
 
-        UserInfo info = DataHelper.getAuthInfo();
-        VerificationCode verificationCode = DataHelper.newVerificationCode(info);
-        TransferInfo planningTransfer = DataHelper.planningTransfer(cardNumberFrom, cardNumberTo, amount);
+        TransferPage transferPage = dashBoardPage.replenishment(planningTransfer);
 
-        LoginPage loginPage = new LoginPage();
+        dashBoardPage = transferPage.validTransfer(planningTransfer, testName);
 
-        VerificationPage verificationPage = loginPage.validAuth(info);
-        DashBoardPage dashBoardMain = verificationPage.validVerify(verificationCode);
-
-        int fromInitialBalance = DataHelper.cardBalance(dashBoardMain.cardChoice(cardNumberFrom));
-        int toInitialBalance = DataHelper.cardBalance(dashBoardMain.cardChoice(cardNumberTo));
-
-        TransferPage testTransfer = dashBoardMain.replenishment(planningTransfer);
-        dashBoardMain = testTransfer.validTransfer(planningTransfer);
-
-        dashBoardMain.resultOfValidReplenishment(planningTransfer, fromInitialBalance, toInitialBalance);
+        dashBoardPage.checkBalance(cardNumberFrom, expectedCardFromBalance);
+        dashBoardPage.checkBalance(cardNumberTo, expectedCardToBalance);
     }
 
     @Test
-    public void canceledTransferWithCompletedInput() {
-        String cardNumberFrom = "5559 0000 0000 0001";
-        String cardNumberTo = "5559 0000 0000 0002";
-        int amount = 10;
+    @DisplayName("canceled_transfer")
+    public void canceledTransfer(TestInfo testInfo) {
+        String testName = testInfo.getDisplayName();
+        cardNumberFrom = "5559 0000 0000 0002";
+        cardNumberTo = "5559 0000 0000 0001";
+        amount = 1;
 
-        UserInfo info = DataHelper.getAuthInfo();
-        VerificationCode verificationCode = DataHelper.newVerificationCode(info);
-        TransferInfo planningTransfer = DataHelper.planningTransfer(cardNumberFrom, cardNumberTo, amount);
+        dashBoardPage = prepareToTransfer();
+        int expectedCardFromBalance = DataHelper.extractBalance(dashBoardPage.cardInfo(cardNumberFrom));
+        int expectedCardToBalance = DataHelper.extractBalance(dashBoardPage.cardInfo(cardNumberTo));
+        TransferPage transferPage = dashBoardPage.replenishment(planningTransfer);
 
-        LoginPage loginPage = new LoginPage();
+        dashBoardPage = transferPage.canceledTransfer(testName);
 
-        VerificationPage verificationPage = loginPage.validAuth(info);
-        DashBoardPage dashBoardMain = verificationPage.validVerify(verificationCode);
-
-        int fromInitialBalance = DataHelper.cardBalance(dashBoardMain.cardChoice(cardNumberFrom));
-        int toInitialBalance = DataHelper.cardBalance(dashBoardMain.cardChoice(cardNumberTo));
-
-        TransferPage testTransfer = dashBoardMain.replenishment(planningTransfer);
-        dashBoardMain = testTransfer.canceledTransferWithCompletedInput(planningTransfer);
-
-        dashBoardMain.resultOfInvalidReplenishment(planningTransfer, fromInitialBalance, toInitialBalance);
+        dashBoardPage.checkBalance(cardNumberFrom, expectedCardFromBalance);
+        dashBoardPage.checkBalance(cardNumberTo, expectedCardToBalance);
     }
 
     @Test
-    public void transferWithEmptyCardFromInput() {
-        String cardNumberFrom = "5559 0000 0000 0001";
-        String cardNumberTo = "5559 0000 0000 0002";
-        int amount = 11001;
+    @DisplayName("canceled_transfer_with_input")
+    public void canceledTransferWithInput(TestInfo testInfo) {
+        String testName = testInfo.getDisplayName();
+        cardNumberFrom = "5559 0000 0000 0002";
+        cardNumberTo = "5559 0000 0000 0001";
+        amount = 1;
 
-        UserInfo info = DataHelper.getAuthInfo();
-        VerificationCode verificationCode = DataHelper.newVerificationCode(info);
-        TransferInfo planningTransfer = DataHelper.planningTransfer(cardNumberFrom, cardNumberTo, amount);
+        dashBoardPage = prepareToTransfer();
+        int expectedCardFromBalance = DataHelper.extractBalance(dashBoardPage.cardInfo(cardNumberFrom));
+        int expectedCardToBalance = DataHelper.extractBalance(dashBoardPage.cardInfo(cardNumberTo));
+        TransferPage transferPage = dashBoardPage.replenishment(planningTransfer);
 
-        LoginPage loginPage = new LoginPage();
+        dashBoardPage = transferPage.canceledTransferWithInput(planningTransfer, testName);
 
-        VerificationPage verificationPage = loginPage.validAuth(info);
-        DashBoardPage dashBoardMain = verificationPage.validVerify(verificationCode);
-
-        int fromInitialBalance = DataHelper.cardBalance(dashBoardMain.cardChoice(cardNumberFrom));
-        int toInitialBalance = DataHelper.cardBalance(dashBoardMain.cardChoice(cardNumberTo));
-
-        TransferPage testTransfer = dashBoardMain.replenishment(planningTransfer);
-        testTransfer.transferWithEmptyCardFromField(planningTransfer);
-        dashBoardMain = testTransfer.canceledTransfer();
-
-        dashBoardMain.resultOfInvalidReplenishment(planningTransfer, fromInitialBalance, toInitialBalance);
+        dashBoardPage.checkBalance(cardNumberFrom, expectedCardFromBalance);
+        dashBoardPage.checkBalance(cardNumberTo, expectedCardToBalance);
     }
 
     @Test
-    public void transferWithEmptyAmountField() {
-        String cardNumberFrom = "5559 0000 0000 0001";
-        String cardNumberTo = "5559 0000 0000 0002";
-        int amount = 11001;
+    @DisplayName("transfer_with_empty_card_from_field")
+    public void transferWithEmptyCardFromField(TestInfo testInfo) {
+        String testName = testInfo.getDisplayName();
+        cardNumberFrom = "5559 0000 0000 0001";
+        cardNumberTo = "5559 0000 0000 0002";
+        amount = 1;
 
-        UserInfo info = DataHelper.getAuthInfo();
-        VerificationCode verificationCode = DataHelper.newVerificationCode(info);
-        TransferInfo planningTransfer = DataHelper.planningTransfer(cardNumberFrom, cardNumberTo, amount);
+        dashBoardPage = prepareToTransfer();
+        int expectedCardFromBalance = DataHelper.extractBalance(dashBoardPage.cardInfo(cardNumberFrom));
+        int expectedCardToBalance = DataHelper.extractBalance(dashBoardPage.cardInfo(cardNumberTo));
+        TransferPage transferPage = dashBoardPage.replenishment(planningTransfer);
 
-        LoginPage loginPage = new LoginPage();
+        dashBoardPage = transferPage.transferWithEmptyCardFromField(planningTransfer, testName);
 
-        VerificationPage verificationPage = loginPage.validAuth(info);
-        DashBoardPage dashBoardMain = verificationPage.validVerify(verificationCode);
-
-        int fromInitialBalance = DataHelper.cardBalance(dashBoardMain.cardChoice(cardNumberFrom));
-        int toInitialBalance = DataHelper.cardBalance(dashBoardMain.cardChoice(cardNumberTo));
-
-        TransferPage testTransfer = dashBoardMain.replenishment(planningTransfer);
-        testTransfer.transferWithEmptyAmountField(planningTransfer);
-        dashBoardMain = testTransfer.canceledTransfer();
-
-        dashBoardMain.resultOfInvalidReplenishment(planningTransfer, fromInitialBalance, toInitialBalance);
+        dashBoardPage.checkBalance(cardNumberFrom, expectedCardFromBalance);
+        dashBoardPage.checkBalance(cardNumberTo, expectedCardToBalance);
     }
 
     @Test
-    public void transferWithZeroAmount() {
-        String cardNumberFrom = "5559 0000 0000 0001";
-        String cardNumberTo = "5559 0000 0000 0002";
-        int amount = 0;
+    @DisplayName("transfer_with_fake_card_from_number")
+    public void transferWithFakeCardFromNumber(TestInfo testInfo) {
+        String testName = testInfo.getDisplayName();
+        cardNumberFrom = "5559 0000 0000 0001";
+        cardNumberTo = "5559 0000 0000 0002";
+        amount = 1;
 
-        UserInfo info = DataHelper.getAuthInfo();
-        VerificationCode verificationCode = DataHelper.newVerificationCode(info);
-        TransferInfo planningTransfer = DataHelper.planningTransfer(cardNumberFrom, cardNumberTo, amount);
+        dashBoardPage = prepareToTransfer();
+        int expectedCardFromBalance = DataHelper.extractBalance(dashBoardPage.cardInfo(cardNumberFrom));
+        int expectedCardToBalance = DataHelper.extractBalance(dashBoardPage.cardInfo(cardNumberTo));
+        TransferPage transferPage = dashBoardPage.replenishment(planningTransfer);
 
-        LoginPage loginPage = new LoginPage();
+        dashBoardPage = transferPage.transferWithFakeCardFromNumber(planningTransfer, testName);
 
-        VerificationPage verificationPage = loginPage.validAuth(info);
-        DashBoardPage dashBoardMain = verificationPage.validVerify(verificationCode);
-
-        int fromInitialBalance = DataHelper.cardBalance(dashBoardMain.cardChoice(cardNumberFrom));
-        int toInitialBalance = DataHelper.cardBalance(dashBoardMain.cardChoice(cardNumberTo));
-
-        TransferPage testTransfer = dashBoardMain.replenishment(planningTransfer);
-        testTransfer.transferWithZeroAmount(planningTransfer);
-        dashBoardMain = testTransfer.canceledTransfer();
-
-        dashBoardMain.resultOfInvalidReplenishment(planningTransfer, fromInitialBalance, toInitialBalance);
+        dashBoardPage.checkBalance(cardNumberFrom, expectedCardFromBalance);
+        dashBoardPage.checkBalance(cardNumberTo, expectedCardToBalance);
     }
 
     @Test
-    public void transferWithCardFromEqualsCardTo() {
-        String cardNumberFrom = "5559 0000 0000 0002";
-        String cardNumberTo = "5559 0000 0000 0002";
-        int amount = 1;
+    @DisplayName("transfer_with_card_from_equals_card_to")
+    public void transferWithCardFromEqualsCardTo(TestInfo testInfo) {
+        String testName = testInfo.getDisplayName();
+        cardNumberFrom = "5559 0000 0000 0001";
+        cardNumberTo = "5559 0000 0000 0001";
+        amount = 1;
 
-        UserInfo info = DataHelper.getAuthInfo();
-        VerificationCode verificationCode = DataHelper.newVerificationCode(info);
-        TransferInfo planningTransfer = DataHelper.planningTransfer(cardNumberFrom, cardNumberTo, amount);
+        dashBoardPage = prepareToTransfer();
+        int expectedCardFromBalance = DataHelper.extractBalance(dashBoardPage.cardInfo(cardNumberFrom));
+        int expectedCardToBalance = DataHelper.extractBalance(dashBoardPage.cardInfo(cardNumberTo));
+        TransferPage transferPage = dashBoardPage.replenishment(planningTransfer);
 
-        LoginPage loginPage = new LoginPage();
+        dashBoardPage = transferPage.transferWithCardFromEqualsCardTo(planningTransfer, testName);
 
-        VerificationPage verificationPage = loginPage.validAuth(info);
-        DashBoardPage dashBoardMain = verificationPage.validVerify(verificationCode);
-
-        int fromInitialBalance = DataHelper.cardBalance(dashBoardMain.cardChoice(cardNumberFrom));
-        int toInitialBalance = DataHelper.cardBalance(dashBoardMain.cardChoice(cardNumberTo));
-
-        TransferPage testTransfer = dashBoardMain.replenishment(planningTransfer);
-        testTransfer.transferWithCardFromEqualsCardTo(planningTransfer);
-        dashBoardMain = testTransfer.canceledTransfer();
-
-        dashBoardMain.resultOfInvalidReplenishment(planningTransfer, fromInitialBalance, toInitialBalance);
+        dashBoardPage.checkBalance(cardNumberFrom, expectedCardFromBalance);
+        dashBoardPage.checkBalance(cardNumberTo, expectedCardToBalance);
     }
 
     @Test
-    public void transferWithNegativeAmount() {
-        String cardNumberFrom = "5559 0000 0000 0001";
-        String cardNumberTo = "5559 0000 0000 0002";
-        int amount = -1;
+    @DisplayName("transfer_with_empty_amount_field")
+    public void transferWithEmptyAmountField(TestInfo testInfo) {
+        String testName = testInfo.getDisplayName();
+        cardNumberFrom = "5559 0000 0000 0001";
+        cardNumberTo = "5559 0000 0000 0002";
+        amount = 1;
 
-        UserInfo info = DataHelper.getAuthInfo();
-        VerificationCode verificationCode = DataHelper.newVerificationCode(info);
-        TransferInfo planningTransfer = DataHelper.planningTransfer(cardNumberFrom, cardNumberTo, amount);
+        dashBoardPage = prepareToTransfer();
+        int expectedCardFromBalance = DataHelper.extractBalance(dashBoardPage.cardInfo(cardNumberFrom));
+        int expectedCardToBalance = DataHelper.extractBalance(dashBoardPage.cardInfo(cardNumberTo));
+        TransferPage transferPage = dashBoardPage.replenishment(planningTransfer);
 
-        LoginPage loginPage = new LoginPage();
+        dashBoardPage = transferPage.transferWithEmptyAmountField(planningTransfer, testName);
 
-        VerificationPage verificationPage = loginPage.validAuth(info);
-        DashBoardPage dashBoardMain = verificationPage.validVerify(verificationCode);
-
-        int fromInitialBalance = DataHelper.cardBalance(dashBoardMain.cardChoice(cardNumberFrom));
-        int toInitialBalance = DataHelper.cardBalance(dashBoardMain.cardChoice(cardNumberTo));
-
-        TransferPage testTransfer = dashBoardMain.replenishment(planningTransfer);
-        testTransfer.transferWithNegativeAmount(planningTransfer);
-        dashBoardMain = testTransfer.canceledTransfer();
-
-        dashBoardMain.resultOfInvalidReplenishment(planningTransfer, fromInitialBalance, toInitialBalance);
+        dashBoardPage.checkBalance(cardNumberFrom, expectedCardFromBalance);
+        dashBoardPage.checkBalance(cardNumberTo, expectedCardToBalance);
     }
 
-//    @Test
-//    public void transferWithAmountAboveBalance() {
-//        String cardNumberFrom = "5559 0000 0000 0001";
-//        String cardNumberTo = "5559 0000 0000 0002";
-//        int amount = 30000;
-//
-//        UserInfo info = DataHelper.getAuthInfo();
-//        VerificationCode verificationCode = DataHelper.newVerificationCode(info);
-//        TransferInfo planningTransfer = DataHelper.planningTransfer(cardNumberFrom, cardNumberTo, amount);
-//
-//        LoginPage loginPage = new LoginPage();
-//
-//        VerificationPage verificationPage = loginPage.validAuth(info);
-//        DashBoardPage dashBoardMain = verificationPage.validVerify(verificationCode);
-//
-//        int fromInitialBalance = DataHelper.cardBalance(dashBoardMain.cardChoice(cardNumberFrom));
-//        int toInitialBalance = DataHelper.cardBalance(dashBoardMain.cardChoice(cardNumberTo));
-//
-//        TransferPage testTransfer = dashBoardMain.replenishment(planningTransfer);
-//        testTransfer.transferWithAmountAboveBalance(planningTransfer, fromInitialBalance);
-//        dashBoardMain = testTransfer.canceledTransfer();
-//
-//        dashBoardMain.resultOfInvalidReplenishment(planningTransfer, fromInitialBalance, toInitialBalance);
-//    }
+    @Test
+    @DisplayName("transfer_with_zero_amount")
+    public void transferWithZeroAmount(TestInfo testInfo) {
+        String testName = testInfo.getDisplayName();
+        cardNumberFrom = "5559 0000 0000 0001";
+        cardNumberTo = "5559 0000 0000 0002";
+        amount = 0;
+
+        dashBoardPage = prepareToTransfer();
+        int expectedCardFromBalance = DataHelper.extractBalance(dashBoardPage.cardInfo(cardNumberFrom));
+        int expectedCardToBalance = DataHelper.extractBalance(dashBoardPage.cardInfo(cardNumberTo));
+        TransferPage transferPage = dashBoardPage.replenishment(planningTransfer);
+
+        dashBoardPage = transferPage.transferWithZeroAmount(planningTransfer, testName);
+
+        dashBoardPage.checkBalance(cardNumberFrom, expectedCardFromBalance);
+        dashBoardPage.checkBalance(cardNumberTo, expectedCardToBalance);
+    }
+
+    @Test
+    @DisplayName("transfer_with_negative_amount")
+    public void transferWithNegativeAmount(TestInfo testInfo) {
+        String testName = testInfo.getDisplayName();
+        cardNumberFrom = "5559 0000 0000 0001";
+        cardNumberTo = "5559 0000 0000 0002";
+        amount = -1;
+
+        dashBoardPage = prepareToTransfer();
+        int expectedCardFromBalance = DataHelper.extractBalance(dashBoardPage.cardInfo(cardNumberFrom));
+        int expectedCardToBalance = DataHelper.extractBalance(dashBoardPage.cardInfo(cardNumberTo));
+        TransferPage transferPage = dashBoardPage.replenishment(planningTransfer);
+
+        dashBoardPage = transferPage.transferWithNegativeAmount(planningTransfer, testName);
+
+        dashBoardPage.checkBalance(cardNumberFrom, expectedCardFromBalance);
+        dashBoardPage.checkBalance(cardNumberTo, expectedCardToBalance);
+    }
 }

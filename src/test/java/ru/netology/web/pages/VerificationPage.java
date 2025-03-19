@@ -12,7 +12,6 @@ public class VerificationPage {
 
     private final SelenideElement codeInputField = $("[data-test-id='code'] input");
     private final SelenideElement verifyButton = $("[data-test-id='action-verify']");
-    private final SelenideElement errorNotification = $("[data-test-id='error-notification']");
 
     public VerificationPage() {
         codeInputField.shouldBe(Condition.visible, Duration.ofSeconds(15));
@@ -21,10 +20,5 @@ public class VerificationPage {
     public void verify(VerificationCode code) {
         codeInputField.setValue(code.getCode());
         verifyButton.click();
-    }
-
-    public DashBoardPage validVerify(VerificationCode code) {
-        verify(code);
-        return new DashBoardPage();
     }
 }
