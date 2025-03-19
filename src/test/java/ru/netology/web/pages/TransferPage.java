@@ -84,10 +84,9 @@ public class TransferPage {
             inputAmount(planningTransfer);
 
             transferButtonClick(testName);
-            errorNotification.shouldBe(Condition.allOf(
-                    Condition.visible,
-                    Condition.exactText("Заполните номер карты, откуда совершить перевод")
-            ), Duration.ofSeconds(10));
+            errorNotification.shouldBe(Condition.visible, Duration.ofSeconds(10));
+            Selenide.screenshot(testName + "_notification");
+            errorNotification.shouldHave(Condition.exactText("Выберите Вашу карту, откуда совершить перевод"));
 
             cancelButton.click();
             return new DashBoardPage();
@@ -104,10 +103,9 @@ public class TransferPage {
             inputCardFromNumber(planningTransfer.getCardNumberFrom());
 
             transferButtonClick(testName);
-            errorNotification.shouldBe(Condition.allOf(
-                    Condition.visible,
-                    Condition.exactText("Выберите другую карту, откуда совершить перевод")
-            ), Duration.ofSeconds(10));
+            errorNotification.shouldBe(Condition.visible, Duration.ofSeconds(10));
+            Selenide.screenshot(testName + "_notification");
+            errorNotification.shouldHave(Condition.exactText("Выберите Вашу карту, откуда совершить перевод"));
 
             cancelButton.click();
             return new DashBoardPage();
@@ -121,10 +119,9 @@ public class TransferPage {
             inputCardFromNumber(DataHelper.fakeCardNumber());
 
             transferButtonClick(testName);
-            errorNotification.shouldBe(Condition.allOf(
-                    Condition.visible,
-                    Condition.exactText("Выберите Вашу карту, откуда совершить перевод")
-            ), Duration.ofSeconds(10));
+            errorNotification.shouldBe(Condition.visible, Duration.ofSeconds(10));
+            Selenide.screenshot(testName + "_notification");
+            errorNotification.shouldHave(Condition.exactText("Выберите Вашу карту, откуда совершить перевод"));
 
             cancelButton.click();
             return new DashBoardPage();
@@ -139,10 +136,9 @@ public class TransferPage {
             inputCardFromNumber(planningTransfer.getCardNumberFrom());
 
             transferButtonClick(testName);
-            errorNotification.shouldBe(Condition.allOf(
-                    Condition.visible,
-                    Condition.exactText("Заполните сумму перевода")
-            ), Duration.ofSeconds(10));
+            errorNotification.shouldBe(Condition.visible, Duration.ofSeconds(10));
+            Selenide.screenshot(testName + "_notification");
+            errorNotification.shouldHave(Condition.exactText("Выберите Вашу карту, откуда совершить перевод"));
 
             cancelButton.click();
             return new DashBoardPage();
@@ -159,10 +155,9 @@ public class TransferPage {
             inputCardFromNumber(planningTransfer.getCardNumberFrom());
 
             transferButtonClick(testName);
-            errorNotification.shouldBe(Condition.allOf(
-                    Condition.visible,
-                    Condition.exactText("Заполните сумму перевода")
-            ), Duration.ofSeconds(10));
+            errorNotification.shouldBe(Condition.visible, Duration.ofSeconds(10));
+            Selenide.screenshot(testName + "_notification");
+            errorNotification.shouldHave(Condition.exactText("Выберите Вашу карту, откуда совершить перевод"));
 
             cancelButton.click();
             return new DashBoardPage();
@@ -180,15 +175,13 @@ public class TransferPage {
                 inputCardFromNumber(planningTransfer.getCardNumberFrom());
 
                 transferButtonClick(testName);
-                errorNotification.shouldBe(Condition.allOf(
-                        Condition.visible,
-                        Condition.exactText("Сумма перевода заполнена некорректно")
-                ), Duration.ofSeconds(10));
+                errorNotification.shouldBe(Condition.visible, Duration.ofSeconds(10));
+                Selenide.screenshot(testName + "_notification");
+                errorNotification.shouldHave(Condition.exactText("Выберите Вашу карту, откуда совершить перевод"));
             }
             cancelButton.click();
             return new DashBoardPage();
         }
         return null;
     }
-
 }
