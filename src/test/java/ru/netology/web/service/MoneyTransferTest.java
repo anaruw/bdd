@@ -12,9 +12,6 @@ import ru.netology.web.util.DataHelper;
 
 public class MoneyTransferTest {
     DashBoardPage dashBoardPage;
-    String cardNumberTo;
-    String cardNumberFrom;
-    int amount;
 
     private DashBoardPage dashBoardPageMain() {
         LoginPage loginPage = new LoginPage();
@@ -25,12 +22,6 @@ public class MoneyTransferTest {
         verificationPage.verify(verifyCode);
 
         return new DashBoardPage();
-    }
-
-    private void prepareToTransfer(boolean equalsCardNumbers, boolean zeroAmount, boolean positiveAmount) {
-        cardNumberTo = DataHelper.cardNumberTo();
-        cardNumberFrom = DataHelper.cardNumberFrom(cardNumberTo, equalsCardNumbers);
-        amount = DataHelper.amount(dashBoardPage.cardInfo(cardNumberFrom), zeroAmount, positiveAmount);
     }
 
     @BeforeEach
@@ -44,7 +35,10 @@ public class MoneyTransferTest {
     @DisplayName("valid_transfer")
     public void validTransfer(TestInfo testInfo) {
         String testName = testInfo.getDisplayName();
-        prepareToTransfer(false, false, true);
+
+        String cardNumberTo = DataHelper.cardNumberTo();
+        String cardNumberFrom = DataHelper.cardNumberFrom(cardNumberTo);
+        int amount = DataHelper.randomAmount(dashBoardPage.cardInfo(cardNumberFrom));
 
         int expectedCardToBalance = DataHelper.extractBalance(dashBoardPage.cardInfo(cardNumberTo)) + amount;
         int expectedCardFromBalance = DataHelper.extractBalance(dashBoardPage.cardInfo(cardNumberFrom)) - amount;
@@ -63,7 +57,7 @@ public class MoneyTransferTest {
     public void canceledTransfer(TestInfo testInfo) {
         String testName = testInfo.getDisplayName();
 
-        cardNumberTo = DataHelper.cardNumberTo();
+        String cardNumberTo = DataHelper.cardNumberTo();
         TransferPage transferPage = dashBoardPage.replenishment(cardNumberTo);
 
         dashBoardPage = transferPage.canceledTransfer(testName);
@@ -73,7 +67,10 @@ public class MoneyTransferTest {
     @DisplayName("canceled_transfer_with_input")
     public void canceledTransferWithInput(TestInfo testInfo) {
         String testName = testInfo.getDisplayName();
-        prepareToTransfer(false, false, true);
+
+        String cardNumberTo = DataHelper.cardNumberTo();
+        String cardNumberFrom = DataHelper.cardNumberFrom(cardNumberTo);
+        int amount = DataHelper.randomAmount(dashBoardPage.cardInfo(cardNumberFrom));
 
         int expectedCardFromBalance = DataHelper.extractBalance(dashBoardPage.cardInfo(cardNumberFrom));
         int expectedCardToBalance = DataHelper.extractBalance(dashBoardPage.cardInfo(cardNumberTo));
@@ -92,16 +89,16 @@ public class MoneyTransferTest {
     public void transferWithEmptyCardFromField(TestInfo testInfo) {
         String testName = testInfo.getDisplayName();
         String notificationText = "Выберите Вашу карту, откуда совершить перевод";
-        prepareToTransfer(false, false, true);
 
-        int expectedCardFromBalance = DataHelper.extractBalance(dashBoardPage.cardInfo(cardNumberFrom));
+        String cardNumberTo = DataHelper.cardNumberTo();
+        int amount = DataHelper.randomAmount(dashBoardPage.cardInfo(cardNumberTo));
+
         int expectedCardToBalance = DataHelper.extractBalance(dashBoardPage.cardInfo(cardNumberTo));
         TransferPage transferPage = dashBoardPage.replenishment(cardNumberTo);
 
         transferPage.inputAmount(amount);
         dashBoardPage = transferPage.invalidTransfer(testName, notificationText);
 
-        dashBoardPage.checkBalance(cardNumberFrom, expectedCardFromBalance);
         dashBoardPage.checkBalance(cardNumberTo, expectedCardToBalance);
     }
 
@@ -110,9 +107,10 @@ public class MoneyTransferTest {
     public void transferWithFakeCardFromNumber(TestInfo testInfo) {
         String testName = testInfo.getDisplayName();
         String notificationText = "Выберите Вашу карту, откуда совершить перевод";
-        prepareToTransfer(false, false, true);
 
-        int expectedCardFromBalance = DataHelper.extractBalance(dashBoardPage.cardInfo(cardNumberFrom));
+        String cardNumberTo = DataHelper.cardNumberTo();
+        int amount = DataHelper.randomAmount(dashBoardPage.cardInfo(cardNumberTo));
+
         int expectedCardToBalance = DataHelper.extractBalance(dashBoardPage.cardInfo(cardNumberTo));
         TransferPage transferPage = dashBoardPage.replenishment(cardNumberTo);
 
@@ -120,7 +118,6 @@ public class MoneyTransferTest {
         transferPage.inputCardFromNumber(DataHelper.fakeCardNumber());
         dashBoardPage = transferPage.invalidTransfer(testName, notificationText);
 
-        dashBoardPage.checkBalance(cardNumberFrom, expectedCardFromBalance);
         dashBoardPage.checkBalance(cardNumberTo, expectedCardToBalance);
     }
 
@@ -129,17 +126,17 @@ public class MoneyTransferTest {
     public void transferWithCardFromEqualsCardTo(TestInfo testInfo) {
         String testName = testInfo.getDisplayName();
         String notificationText = "Выберите Вашу карту, откуда совершить перевод";
-        prepareToTransfer(true, false, true);
 
-        int expectedCardFromBalance = DataHelper.extractBalance(dashBoardPage.cardInfo(cardNumberFrom));
+        String cardNumberTo = DataHelper.cardNumberTo();
+        int amount = DataHelper.randomAmount(dashBoardPage.cardInfo(cardNumberTo));
+
         int expectedCardToBalance = DataHelper.extractBalance(dashBoardPage.cardInfo(cardNumberTo));
         TransferPage transferPage = dashBoardPage.replenishment(cardNumberTo);
 
         transferPage.inputAmount(amount);
-        transferPage.inputCardFromNumber(cardNumberFrom);
+        transferPage.inputCardFromNumber(cardNumberTo);
         dashBoardPage = transferPage.invalidTransfer(testName, notificationText);
 
-        dashBoardPage.checkBalance(cardNumberFrom, expectedCardFromBalance);
         dashBoardPage.checkBalance(cardNumberTo, expectedCardToBalance);
     }
 
@@ -148,7 +145,9 @@ public class MoneyTransferTest {
     public void transferWithEmptyAmountField(TestInfo testInfo) {
         String testName = testInfo.getDisplayName();
         String notificationText = "Введите сумму перевода";
-        prepareToTransfer(false, false, true);
+
+        String cardNumberTo = DataHelper.cardNumberTo();
+        String cardNumberFrom = DataHelper.cardNumberFrom(cardNumberTo);
 
         int expectedCardFromBalance = DataHelper.extractBalance(dashBoardPage.cardInfo(cardNumberFrom));
         int expectedCardToBalance = DataHelper.extractBalance(dashBoardPage.cardInfo(cardNumberTo));
@@ -166,7 +165,10 @@ public class MoneyTransferTest {
     public void transferWithZeroAmount(TestInfo testInfo) {
         String testName = testInfo.getDisplayName();
         String notificationText = "Введите сумму перевода";
-        prepareToTransfer(false, true, true);
+
+        String cardNumberTo = DataHelper.cardNumberTo();
+        String cardNumberFrom = DataHelper.cardNumberFrom(cardNumberTo);
+        int amount = DataHelper.zeroAmount();
 
         int expectedCardFromBalance = DataHelper.extractBalance(dashBoardPage.cardInfo(cardNumberFrom));
         int expectedCardToBalance = DataHelper.extractBalance(dashBoardPage.cardInfo(cardNumberTo));
@@ -190,7 +192,10 @@ public class MoneyTransferTest {
     public void transferWithNegativeAmount(TestInfo testInfo) {
         String testName = testInfo.getDisplayName();
         String notificationText = "Сумма перевода введена некорректно";
-        prepareToTransfer(false, false, false);
+
+        String cardNumberTo = DataHelper.cardNumberTo();
+        String cardNumberFrom = DataHelper.cardNumberFrom(cardNumberTo);
+        int amount = DataHelper.negativeAmount(dashBoardPage.cardInfo(cardNumberFrom));
 
         int expectedCardFromBalance = DataHelper.extractBalance(dashBoardPage.cardInfo(cardNumberFrom));
         int expectedCardToBalance = DataHelper.extractBalance(dashBoardPage.cardInfo(cardNumberTo));

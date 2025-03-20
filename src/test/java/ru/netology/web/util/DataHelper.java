@@ -62,19 +62,15 @@ public class DataHelper {
         return enabledCards.get(index);
     }
 
-    public String cardNumberFrom(String cardNumberTo, boolean equals) {
-        if (equals) {
-            return cardNumberTo;
-        } else {
-            int index = rnd.nextInt(enabledCards.size());
+    public String cardNumberFrom(String cardNumberTo) {
+        int index = rnd.nextInt(enabledCards.size());
 
-            for (int i = 0; i < 3; i++) {
-                if (index == enabledCards.indexOf(cardNumberTo)) {
-                    index = rnd.nextInt(enabledCards.size());
-                } else break;
-            }
-            return enabledCards.get(index);
+        for (int i = 0; i < 3; i++) {
+            if (index == enabledCards.indexOf(cardNumberTo)) {
+                index = rnd.nextInt(enabledCards.size());
+            } else break;
         }
+        return enabledCards.get(index);
     }
 
     public int extractBalance(String cardInfo) {
@@ -84,7 +80,7 @@ public class DataHelper {
         return Integer.parseInt(cardInfo.substring(cardInfo.indexOf(beforeBalanceText) + beforeBalanceText.length(), cardInfo.indexOf(afterBalanceText)));
     }
 
-    private int randomAmount(String cardFromInfo) {
+    public int randomAmount(String cardFromInfo) {
         int result = rnd.nextInt(extractBalance(cardFromInfo));
 
         for (int i = 0; i < 3; i++) {
@@ -95,13 +91,11 @@ public class DataHelper {
         return result;
     }
 
-    public int amount(String cardFromInfo, boolean zeroAmount, boolean positiveAmount) {
-        if (zeroAmount) {
-            return 0;
-        } else if (positiveAmount) {
-            return randomAmount(cardFromInfo);
-        } else {
-            return - randomAmount(cardFromInfo);
-        }
+    public int zeroAmount() {
+        return 0;
+    }
+
+    public int negativeAmount(String cardToInfo) {
+        return - randomAmount(cardToInfo);
     }
 }
