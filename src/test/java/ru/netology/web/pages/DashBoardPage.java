@@ -3,7 +3,6 @@ package ru.netology.web.pages;
 import com.codeborne.selenide.Condition;
 import com.codeborne.selenide.ElementsCollection;
 import com.codeborne.selenide.SelenideElement;
-import ru.netology.web.data.TransferInfo;
 import ru.netology.web.util.DataHelper;
 
 import java.time.Duration;
@@ -37,8 +36,8 @@ public class DashBoardPage {
         ));
     }
 
-    public TransferPage replenishment(TransferInfo planningTransfer) {
-        cardChoice(planningTransfer.getCardNumberTo()).$("[data-test-id='action-deposit']").click();
+    public TransferPage replenishment(String cardNumberTo) {
+        cardChoice(cardNumberTo).$("[data-test-id='action-deposit']").click();
         return new TransferPage();
     }
 }
